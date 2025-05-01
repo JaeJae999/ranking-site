@@ -1,0 +1,150 @@
+<!-- index_female.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>여자부 경기 등록</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    aside {
+      width: 200px;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+    aside h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    aside ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    aside li {
+      margin: 10px 0;
+    }
+    aside a {
+      text-decoration: none;
+      color: #333;
+      font-weight: normal;
+    }
+    aside a.active {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    main {
+      flex: 1;
+      padding: 30px;
+      background-color: #f9d5e5;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <h3>🏷️ 메뉴</h3>
+    <ul>
+      <li><a href="index_male.html">남자부 경기 등록</a></li>
+      <li><a href="index_female.html" class="active">여자부 경기 등록</a></li>
+      <li><a href="ranking_male.html">남자부 랭킹</a></li>
+      <li><a href="ranking_female.html">여자부 랭킹</a></li>
+    </ul>
+  </aside>
+  <main>
+    <h1>🎾 여자부 경기 등록</h1>
+    <input type="text" id="player1" placeholder="선수1 이름">
+    <input type="text" id="player2" placeholder="선수2 이름">
+    <input type="text" id="score" placeholder="스코어 (예: 7-5)">
+    <p>누가 이겼나요?</p>
+    <label><input type="radio" name="winner" value="player1"> 선수1</label>
+    <label><input type="radio" name="winner" value="player2"> 선수2</label>
+    <button id="submit">경기 등록</button>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, Timestamp,
+    doc, getDoc, setDoc, updateDoc
+  } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAyFJxVKLZ9DLrD8z24pSFpmKqityS_DSA",
+    authDomain: "tennisscoreapp-52f66.firebaseapp.com",
+    projectId: "tennisscoreapp-52f66",
+    storageBucket: "tennisscoreapp-52f66.appspot.com",
+    messagingSenderId: "1008742240515",
+    appId: "1:1008742240515:web:3115bf170847fefdd51936"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const submitBtn = document.getElementById('submit');
+  submitBtn.addEventListener('click', async () => {
+    const player1 = document.getElementById('player1').value.trim();
+    const player2 = document.getElementById('player2').value.trim();
+    const score = document.getElementById('score').value.trim();
+
+    if (!player1 || !player2 || !score) {
+      alert("모든 칸을 입력하세요.");
+      return;
+    }
+
+    const winnerRadio = document.querySelector('input[name="winner"]:checked');
+    if (!winnerRadio) {
+      alert("승자를 선택하세요.");
+      return;
+    }
+
+    const winner = winnerRadio.value === "player1" ? player1 : player2;
+    const loser = winner === player1 ? player2 : player1;
+
+    try {
+      await addDoc(collection(db, "matches_female"), {
+        player1,
+        player2,
+        score,
+        winner,
+        date: Timestamp.now()
+      });
+
+      await updatePlayer(winner, true);
+      await updatePlayer(loser, false);
+
+      alert("경기 등록 완료!");
+      location.reload();
+    } catch (e) {
+      console.error("Error:", e);
+    }
+  });
+
+  async function updatePlayer(name, isWinner) {
+    const playerRef = doc(db, "players_female", name);
+    const snap = await getDoc(playerRef);
+    if (snap.exists()) {
+      await updateDoc(playerRef, {
+        wincount: (snap.data().wincount || 0) + (isWinner ? 1 : 0),
+        losecount: (snap.data().losecount || 0) + (isWinner ? 0 : 1),
+        points: (snap.data().points || 0) + (isWinner ? 3 : 1),
+        name: name
+      });
+    } else {
+      await setDoc(playerRef, {
+        wincount: isWinner ? 1 : 0,
+        losecount: isWinner ? 0 : 1,
+        points: isWinner ? 3 : 1,
+        name: name
+      });
+    }
+  }
+</script>
+</body>
+</html>

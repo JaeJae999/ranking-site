@@ -43,6 +43,36 @@
       padding: 30px;
       background-color: #f9d5e5;
     }
+    @media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  main {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
   </style>
 </head>
 <body>
